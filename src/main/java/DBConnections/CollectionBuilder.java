@@ -1,28 +1,32 @@
 package DBConnections;
 
-
 import com.mongodb.MongoClient;
-import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import org.bson.Document;
+import org.bson.conversions.Bson;
 
-import java.sql.Time;
-import java.util.ArrayList;
-import java.time.*;
+import java.util.Calendar;
+import java.util.Date;
 
-import java.util.List;
+import static com.mongodb.client.model.Filters.and;
+import static com.mongodb.client.model.Filters.gt;
+import static com.mongodb.client.model.Filters.lt;
 
-import static javafx.scene.input.KeyCode.T;
-
+/**
+ * Created by scapista on 3/1/18.
+ * +
+ * + Priority:
+ * + 1. build failing
+ * + 2. function not working
+ * + 3. nice to have but would optimize
+ * + 4. nice to have no benefit
+ * + 5. future state
+ */
 
 public class CollectionBuilder {
-    private MongoClient client;
-    private MongoDatabase database;
-    private MongoCollection collection;
-    private List<String> anchorSafariList = new ArrayList<String>();
-
-
+    protected MongoClient client;
+    protected MongoDatabase database;
+    protected MongoCollection collection;
 
     public CollectionBuilder(String database, String Collection){
         this.client = new MongoClient();
@@ -30,31 +34,19 @@ public class CollectionBuilder {
         this.collection = this.database.getCollection(Collection);
     }
 
-    public CollectionBuilder setDevStatsStatCollection(List<Document> safariTabs, Document focusApplication){
-        setNewDayStatsCollection(safariTabs, focusApplication);
-
-        return this;
-    }
     public void closeConnection(){ this.client.close();}
-    private void setUpdateDayStatsCollection(List<Document> safariTabs, Document focusApplication){
-        Document coll = new Document("date",Instant.now().toEpochMilli())
-                .append("focusApp", focusApplication)
-                .append("safari tabs", safariTabs);
+
+    protected Bson getTodayDateRange(String dateAttribute){
+        Date now = new Date();
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(now);
+        cal.add(Calendar.HOUR, -cal.getTime().getHours());
+        cal.add(Calendar.MINUTE, -cal.getTime().getMinutes());
+        cal.add(Calendar.SECOND, -cal.getTime().getSeconds());
+        cal.add(Calendar.MILLISECOND,  -(int)(cal.getTimeInMillis()%1000) );
+        Date yest = cal.getTime();
+
+        return and(lt(dateAttribute, now),gt(dateAttribute, yest));
     }
-    private void setNewDayStatsCollection(List<Document> safariTabs, Document focusApplication){
-        Document coll = new Document("date",Instant.now().toEpochMilli())
-                .append("focusApp", focusApplication)
-                .append("safari tabs", safariTabs);
-        //TODO: test for missing database
-        this.collection.insertOne(coll);
-    }
-    public FindIterable getQuery(){
-        return this.collection.find();
-    }
-    public static void main(String args[]){
-        CollectionBuilder cb = new CollectionBuilder("devStats","statCollection");
-        for (Object tmpDoc : cb.getQuery()){
-            System.out.println(tmpDoc);
-        }
-    }
+
 }
