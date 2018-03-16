@@ -70,8 +70,13 @@ public class statCollectionBuilder {
 
     private void setSafariNodes(ArrayList<String[]> safariTabs) {
         for (String[] safariTab : safariTabs) {
+            //bandaid for lifestats-3
+            int windowNumber = 1;
+            if (Integer.valueOf(safariTab[0]) != null)
+                windowNumber = Integer.valueOf(safariTab[0]);
+
             SafariNode safariNode =
-                    new SafariNode(Integer.valueOf(safariTab[0]),
+                    new SafariNode(windowNumber,
                             safariTab[2].toLowerCase(),
                             safariTab[1].toLowerCase(),
                             this.isNew
